@@ -1,15 +1,16 @@
 ; lcd_fast.inc: 仮想画面を LCD に速く送る（pokerace.asm から INCLUDE する）
 ;
-; 速さを比べた結果（1 画面 960 バイト、エミュレータで数えたサイクル）:
-;   IOCS SCRN_ROW_WRITE × 4 行          24057
-;   直接、1 バイトずつのループ（screen.inc）  16442
-;   直接、7 バイトずつ展開、POPU で読む       9692
-; そのうえ、毎コマ送るのは道の所（x = 43〜196、616 バイト）だけにして、計器は変わったときだけ送る。
+; 毎コマ送るのは道の所（x = 43〜196、616 バイト）だけにして、計器は変わったときだけ送る。
+;
+; データは 14 サイクル以上の間をあけて書く。LCD コントローラは 1 バイト受け取ると
+; しばらく BUSY になり、その間に来たデータを捨てる。実機（PC-E650）で試すと、待たずに書く間隔が
+; 6、8、10 サイクルでは取りこぼし、14 サイクルでは取りこぼさなかった。ROM は 1 バイトに
+; 23〜28 サイクルかけている。エミュレータは BUSY を真似しないので、エミュレータでは崩れない。
 ;
 ; LCD のアドレスは 0A00xh 台を使う。LCD は A0〜A3、A12、A13 だけを見るので 2000h 台と同じ
 ; コントローラに届く。2000h〜3FFFh は CPU が LCD の窓として 1 回 7 ステートに遅くする範囲で、
 ; 0A00xh は ROM が表示に使っているアドレス（解析 4 章）。
-; 左から右へ並ぶ所は U をポインタにして POPU A（2 サイクル）で読む。U を戻すまで PUSHU は使えない。
+; 左から右へ並ぶ所は U をポインタにして POPU A で読む。U を戻すまで PUSHU は使えない。
 
 LCD_A2  EQU   $A008             ; 中央のコントローラ: 命令、+1 状態、+2 データ
 LCD_B2  EQU   $A004             ; 両端のコントローラ
@@ -51,14 +52,14 @@ show_view1:
         MV    A,43
         ADD   U,A
         MV    Y,LCD_B2+2
-        MV    IL,3
+        MV    IL,21
         CALL  put_fwd
         MV    (t0),LCD_COLUMN           ; x = 64〜119: 中央、桁 0 から
         MV    A,(cnt)
         ADD   A,LCD_PAGE
         CALL  set_a2
         MV    Y,LCD_A2+2
-        MV    IL,8
+        MV    IL,56
         CALL  put_fwd
         MV    A,176                     ; x = 175〜120: 中央の下半分（右から左）
         ADD   X,A
@@ -66,7 +67,7 @@ show_view1:
         ADD   A,LCD_PAGE+4
         CALL  set_a2
         MV    Y,LCD_A2+2
-        MV    IL,8
+        MV    IL,56
         CALL  put_rev
         MV    A,77                      ; x = 196〜176: 両端の下半分、桁 43 から
         ADD   X,A
@@ -75,7 +76,7 @@ show_view1:
         ADD   A,LCD_PAGE+4
         CALL  set_b2
         MV    Y,LCD_B2+2
-        MV    IL,3
+        MV    IL,21
         CALL  put_rev
         MV    A,64                      ; 次の行
         ADD   X,A
@@ -104,10 +105,8 @@ show_panels1:
         CALL  set_b2
         MV    U,X
         MV    Y,LCD_B2+2
-        MV    IL,6              ; 43 = 7 × 6 + 1
+        MV    IL,43
         CALL  put_fwd
-        POPU  A
-        MV    [Y],A
 show_panels2:
         TEST  (BP+t1),$10       ; 右（x = 239〜197）
         JRZ   show_panels3
@@ -119,10 +118,8 @@ show_panels2:
         MV    A,240
         ADD   X,A
         MV    Y,LCD_B2+2
-        MV    IL,6
+        MV    IL,43
         CALL  put_rev
-        MV    A,[--X]
-        MV    [Y],A
         POPS  X
 show_panels3:
         MV    A,240
@@ -159,40 +156,18 @@ set_ab2c:
         JRNZ  set_ab2c
         RET
 
-; [U++] から [Y] へ 7 × IL バイト。
+; [U++] から [Y] へ IL バイト。書く間隔は 14 サイクル（NOP 2 つで合わせる）。
 put_fwd:
         POPU  A
-        MV    [Y],A
-        POPU  A
-        MV    [Y],A
-        POPU  A
-        MV    [Y],A
-        POPU  A
-        MV    [Y],A
-        POPU  A
-        MV    [Y],A
-        POPU  A
-        MV    [Y],A
-        POPU  A
+        NOP
+        NOP
         MV    [Y],A
         DEC   IL
         JRNZ  put_fwd
         RET
 
-; [--X] から [Y] へ 7 × IL バイト。
+; [--X] から [Y] へ IL バイト。書く間隔は 15 サイクル。
 put_rev:
-        MV    A,[--X]
-        MV    [Y],A
-        MV    A,[--X]
-        MV    [Y],A
-        MV    A,[--X]
-        MV    [Y],A
-        MV    A,[--X]
-        MV    [Y],A
-        MV    A,[--X]
-        MV    [Y],A
-        MV    A,[--X]
-        MV    [Y],A
         MV    A,[--X]
         MV    [Y],A
         DEC   IL
