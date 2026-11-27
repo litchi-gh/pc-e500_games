@@ -169,7 +169,7 @@ bgm_frame:
         MV    BA,(BP+snd_h)
         INC   BA
         JRNZ  bgm_frame1
-        CALL  pad_read          ; 終わり
+        CALL  pad_game          ; 終わり
         TEST  (pad_now),PAD_BREAK
         JRNZ  key_frame1
         RC
@@ -187,7 +187,7 @@ bgm_frame2:
         CALL  tone
         AND   (SCR),BZ_OFF
 bgm_frame3:
-        CALL  pad_read
+        CALL  pad_game
         TEST  (pad_now),PAD_BREAK
         JRNZ  key_frame1
         RC
@@ -197,7 +197,7 @@ bgm_frame3:
 
 ; 1 コマ待ってキーを見る: ON/BRK なら C = 1、SPACE が押されたら Z = 0
 key_frame:
-        CALL  pad_read
+        CALL  pad_game
         TEST  (pad_now),PAD_BREAK
         JRNZ  key_frame1
         MV    A,2
@@ -227,7 +227,7 @@ select_car1:
         CALL  draw_select
         CALL  show_all
 select_car2:
-        CALL  pad_read
+        CALL  pad_game
         TEST  (pad_now),PAD_BREAK
         JRNZ  select_car9
         TEST  (pad_new),PAD_A
@@ -581,7 +581,7 @@ enter_name7:
         CALL  draw_name
         CALL  show_all
 enter_name8:
-        CALL  pad_read
+        CALL  pad_game
         TEST  (pad_now),PAD_BREAK
         JRNZ  enter_name_q
         TEST  (pad_new),PAD_A

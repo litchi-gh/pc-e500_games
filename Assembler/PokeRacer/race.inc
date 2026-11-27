@@ -16,7 +16,7 @@ race:   CALL  load_stage
         MV    A,3*TPS           ; 3、2、1 と数えてから走り出す
         MV    [cdown],A
 race_loop:
-        CALL  pad_read
+        CALL  pad_game
         TEST  (pad_now),PAD_BREAK
         JPNZ  race_break
         CALL  calc_step
@@ -365,6 +365,28 @@ set_msg:
         MV    [msg],A
         RET
 
+; ---- キーを読む: pad_read に、テンキーの 4（左）と 6（右）を足す（矢印と併用） ----
+pad_game:
+        CALL  pad_read
+        MV    (KOL),$20         ; KO5: 4 は KI5
+        NOP
+        TEST  (KI),$20
+        JRZ   pad_game1
+        OR    (pad_now),PAD_LEFT
+pad_game1:
+        MV    (KOL),$80         ; KO7: 6 は KI5
+        NOP
+        TEST  (KI),$20
+        JRZ   pad_game2
+        OR    (pad_now),PAD_RIGHT
+pad_game2:
+        MV    (KOL),0
+        MV    A,(pad_old)       ; 新しく押されたもの = 今 かつ 前でない
+        XOR   A,$FF
+        AND   A,(pad_now)
+        MV    (pad_new),A
+        RET
+
 ; ---- 自動で走る（タイトルの後ろ、ゴールの後）: 道の真ん中に戻るようにハンドルを切る ----
 autopilot:
         MV    (pad_now),0
@@ -419,7 +441,7 @@ control:
         ADD   (t1+1),TURBO_V
 control0:
         MV    A,[speed]
-        TEST  (pad_now),PAD_DOWN
+        TEST  (pad_now),PAD_DOWN+PAD_A ; ブレーキは ▼ か SPACE
         JRNZ  control2
         MV    (t0),A
         CMP   (t1+1),A          ; 最高速度より速ければ、少しずつ落とす
