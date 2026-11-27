@@ -8,7 +8,7 @@ SHARP PC-E500 シリーズ（PC-E500、PC-E500S、PC-E650 など）で動くゲ�
 
 | 画面 | ゲーム | 内容 | 大きさ |
 |---|---|---|---|
-| ![ポケレーサー](Assembler/PokeRacer/screens/seaside.png) | [ポケレーサー](Assembler/PokeRacer/README.md) | 後ろから見た道を走るレースゲーム。車 3 台、8 ステージ、アイテム、コースの図。RAM 32 KB 以上 | 26,481 バイト |
+| ![ポケレーサー](Assembler/PokeRacer/screens/seaside.png) | [ポケレーサー](Assembler/PokeRacer/README.md) | 後ろから見た道を走るレースゲーム。車 3 台、8 ステージ、アイテム、コースの図。RAM 32 KB 以上 | 26,420 バイト |
 | ![ナインボックス](images/ninebox.png) | [ナインボックス](Assembler/NineBox/README.md) | 3 × 3 のマスを埋めて消すパズル | 9,336 バイト |
 | ![スターキャッチ](images/starcatch.png) | [スターキャッチ](Assembler/StarCatch/README.md) | 敵をよけて星を取る | 約 5 KB |
 | ![メテオ](images/meteor.png) | [メテオ](Assembler/Meteor/README.md) | 飛んでくる隕石を撃つ | 約 5 KB |
